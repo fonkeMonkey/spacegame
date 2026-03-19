@@ -99,9 +99,14 @@ function update(dt) {
     }
   }
 
-  // Ship vs asteroid — reset ship to canvas centre on collision
+  // Ship vs asteroid
   for (var k = 0; k < asteroids.length; k++) {
     if (circleCollides(ship, asteroids[k])) {
+      state.lives--;
+      if (state.lives <= 0) {
+        state.mode = 'GAME_OVER';
+        return;
+      }
       ship = new Ship(canvas.width / 2, canvas.height / 2);
       break;
     }
