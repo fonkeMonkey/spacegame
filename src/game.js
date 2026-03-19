@@ -35,10 +35,6 @@ function init() {
     if (e.code === 'Enter') {
       if (state.mode === 'MENU' || state.mode === 'GAME_OVER') resetGame();
     }
-    if (e.code === 'Space' && state.mode === 'PLAYING') {
-      var b = ship.fire();
-      if (b) bullets.push(b);
-    }
   });
 
   requestAnimationFrame(gameLoop);
@@ -71,6 +67,12 @@ function update(dt) {
 
   // Update ship
   ship.update(dt, input, canvas.width, canvas.height);
+
+  // Shoot (Space held down — rate-limited by ship.fireCooldown)
+  if (input.isDown('Space')) {
+    var b = ship.fire();
+    if (b) bullets.push(b);
+  }
 
   // Update bullets
   for (var i = bullets.length - 1; i >= 0; i--) {
