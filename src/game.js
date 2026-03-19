@@ -3,7 +3,7 @@
   var base = document.currentScript
     ? document.currentScript.src.replace(/game\.js$/, '')
     : 'src/';
-  var modules = ['utils.js', 'input.js', 'collision.js', 'bullet.js', 'asteroid.js', 'ship.js', 'renderer.js'];
+  var modules = ['utils.js', 'input.js', 'collision.js', 'bullet.js', 'asteroid.js', 'ship.js', 'particle.js', 'renderer.js'];
   modules.forEach(function(m) {
     var s = document.createElement('script');
     s.src = base + m;
@@ -22,7 +22,7 @@ var state = {
   wave: 0,
   wavePause: 0,
 };
-var ship, asteroids, bullets;
+var ship, asteroids, bullets, particles;
 var lastTime = 0;
 
 // --- Init ---
@@ -85,11 +85,18 @@ function update(dt) {
     asteroids[j].update(dt, canvas.width, canvas.height);
   }
 
+  // Update particles
+  for (var pi = particles.length - 1; pi >= 0; pi--) {
+    particles[pi].update(dt, canvas.width, canvas.height);
+    if (particles[pi].isExpired()) particles.splice(pi, 1);
+  }
+
   // Bullet vs asteroid
   for (var bi = bullets.length - 1; bi >= 0; bi--) {
     for (var ai = asteroids.length - 1; ai >= 0; ai--) {
       if (circleCollides(bullets[bi], asteroids[ai])) {
         state.score += asteroids[ai].score;
+        spawnParticles(asteroids[ai].x, asteroids[ai].y);
         var fragments = asteroids[ai].split();
         asteroids.splice(ai, 1);
         bullets.splice(bi, 1);
@@ -136,6 +143,7 @@ function render() {
 
   asteroids.forEach(function(a) { drawAsteroid(ctx, a); });
   bullets.forEach(function(b)   { drawBullet(ctx, b); });
+  drawParticles(ctx, particles);
   drawShip(ctx, ship);
   drawHUD(ctx, state);
 
@@ -159,11 +167,19 @@ function spawnWave(count) {
   }
 }
 
+function spawnParticles(x, y) {
+  var count = Math.floor(randomRange(8, 13));
+  for (var i = 0; i < count; i++) {
+    particles.push(new Particle(x, y));
+  }
+}
+
 function resetGame() {
   state.score = 0;
   state.lives = 3;
   state.wave = 0;
   state.mode = 'PLAYING';
+  particles = [];
   ship = new Ship(canvas.width / 2, canvas.height / 2);
   spawnWave(4);
 }

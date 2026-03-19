@@ -46,6 +46,15 @@ function drawBullet(ctx, bullet) {
   ctx.fill();
 }
 
+function drawParticles(ctx, particles) {
+  ctx.fillStyle = '#ffffff';
+  for (var i = 0; i < particles.length; i++) {
+    ctx.beginPath();
+    ctx.arc(particles[i].x, particles[i].y, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 function drawHUD(ctx, state) {
   ctx.fillStyle = '#fff';
   ctx.font = '16px monospace';
