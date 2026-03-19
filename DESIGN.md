@@ -53,6 +53,21 @@ When `x` or `y` crosses a canvas boundary the position wraps to the opposite edg
 - Limited lifetime (leave screen or timeout)
 - Destroy asteroids on contact
 
+### Particles
+- Purely visual — no hitbox, no collision involvement
+- Spawned in a burst at the position of an asteroid the moment it is destroyed by a bullet
+- Ship–asteroid collisions do **not** spawn particles
+- Each burst emits **8–12 particles** (random integer, uniform)
+- Each particle receives:
+  - A random direction: `angle = randomRange(0, 2π)`
+  - A random speed: `speed = randomRange(60, 180)` px/s
+  - A random lifetime: `lifetime = randomRange(0.4, 0.8)` seconds
+- Position is integrated each frame (same `vx/vy * dt` pattern as asteroids)
+- Particles wrap screen edges via `wrapPosition`
+- A particle is removed when `lifetime ≤ 0`
+- Visual: filled circle, radius 2 px, colour `#ffffff` (white)
+- Stored in a global `particles` array; cleared on `resetGame()`
+
 ### Scoring
 - Small asteroid: 100 pts
 - Medium asteroid: 50 pts
@@ -76,6 +91,7 @@ spacegame/
     ├── ship.js         # Player ship entity
     ├── asteroid.js     # Asteroid entity + split logic
     ├── bullet.js       # Bullet entity
+    ├── particle.js     # Particle entity (visual debris)
     ├── input.js        # Keyboard input handler
     ├── collision.js    # Circle-based collision detection
     ├── renderer.js     # All canvas draw calls
@@ -93,7 +109,8 @@ spacegame/
 | `gameLoop(timestamp)` | RAF callback — calls update + render each frame |
 | `update(dt)` | Advance all entities, check collisions, manage wave state |
 | `spawnWave(count)` | Create `count` large asteroids away from ship |
-| `resetGame()` | Restore initial state for new game |
+| `spawnParticles(x, y)` | Emit 8–12 `Particle` objects at `(x, y)`, push to `particles` array |
+| `resetGame()` | Restore initial state for new game; clears `particles` array |
 
 ### `ship.js`
 | Function | Description |
@@ -116,6 +133,13 @@ spacegame/
 | `bullet.update(dt)` | Move, decrement lifetime |
 | `bullet.isExpired()` | Return true when lifetime <= 0 |
 
+### `particle.js`
+| Function | Description |
+|---|---|
+| `Particle(x, y)` | Constructor — random angle, speed (60–180 px/s), lifetime (0.4–0.8 s); no radius |
+| `particle.update(dt)` | Integrate position, decrement lifetime, wrap via `wrapPosition` |
+| `particle.isExpired()` | Return true when lifetime <= 0 |
+
 ### `collision.js`
 | Function | Description |
 |---|---|
@@ -127,6 +151,7 @@ spacegame/
 | `drawShip(ctx, ship)` | Draw triangle + thruster flame |
 | `drawAsteroid(ctx, asteroid)` | Draw irregular polygon |
 | `drawBullet(ctx, bullet)` | Draw small circle/dot |
+| `drawParticles(ctx, particles)` | Draw each particle as a white filled circle (radius 2) |
 | `drawHUD(ctx, state)` | Score, lives, wave number |
 
 ### `input.js`
