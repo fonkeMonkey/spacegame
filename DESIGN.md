@@ -20,6 +20,34 @@ A browser-based Asteroids-style space shooter built with HTML5 Canvas and vanill
 - Move in straight lines at random velocities; wrap screen edges
 - Small asteroids are destroyed; Large/Medium split into two smaller ones
 
+#### Size Profiles
+
+| Size   | Radius | Speed (px/s)    | Score | Splits into   |
+|--------|--------|-----------------|-------|---------------|
+| Large  | 40     | 30 – 60         | 20    | 2 × Medium    |
+| Medium | 20     | 50 – 100        | 50    | 2 × Small     |
+| Small  | 10     | 75 – 150        | 100   | (destroyed)   |
+
+#### Spawning Rules
+1. **Wave start** — `spawnWave(n)` places `n` Large asteroids at random positions. Each candidate position is rejected and resampled if it falls within a **120 px exclusion radius** around the ship spawn point (canvas centre), preventing instant collisions.
+2. **Split spawn** — when a Large or Medium asteroid is destroyed, two children of the next size are created at the parent's position. Each child receives an independent random angle and speed drawn from its size profile, so they diverge naturally.
+3. **Count per wave** — wave 1 starts with 4 Large asteroids; each subsequent wave adds 1 (wave `n` → `3 + n` large asteroids).
+
+#### Movement Vectors
+Each asteroid is assigned a velocity vector at construction:
+```
+angle  = randomRange(0, 2π)          // uniform random direction
+speed  = randomRange(min, max)        // from size profile above
+vx     = cos(angle) * speed
+vy     = sin(angle) * speed
+```
+Position is integrated each frame with fixed delta time:
+```
+x += vx * dt
+y += vy * dt
+```
+When `x` or `y` crosses a canvas boundary the position wraps to the opposite edge (`wrapPosition`). Velocity is never altered after construction — asteroids travel in perfectly straight lines.
+
 ### Bullets
 - Travel in the direction the ship was facing when fired
 - Limited lifetime (leave screen or timeout)
@@ -121,6 +149,40 @@ spacegame/
 - `PLAYING` — active gameplay
 - `WAVE_CLEAR` — brief pause before next wave
 - `GAME_OVER` — show score, press Enter to restart
+
+---
+
+## Collision Detection
+
+All collision pairs use **circle vs circle** detection. Every entity exposes `x`, `y`, and `radius`.
+
+### Algorithm
+```
+dx   = a.x - b.x
+dy   = a.y - b.y
+dist = sqrt(dx*dx + dy*dy)
+hit  = dist < (a.radius + b.radius)
+```
+`sqrt` is used (not squared comparison) for clarity; at < 50 entities per frame the cost is negligible.
+
+### Collision Pairs Checked Each Frame
+
+| Pair | On Hit | Notes |
+|---|---|---|
+| Bullet → Asteroid | Bullet removed; asteroid split or destroyed; score added | Inner loop breaks after first hit per bullet |
+| Ship → Asteroid | Life lost; ship respawns at centre; asteroid survives | Only checked while `state.mode === 'PLAYING'` |
+
+### Ship Hitbox
+The ship's collision circle (`radius = 14`) is centred on the ship's position. This is intentionally slightly smaller than the visible triangle (~16 px tip-to-tip) to give the player a small grace margin — a common convention in arcade shooters.
+
+### Asteroid Hitbox
+Each asteroid's `radius` matches the value in the size profile table. The visual polygon vertices are generated at up to ±25% of this radius, so the collision circle sits slightly inside the jagged outline — again giving the player a small visual buffer.
+
+### Screen-wrap and Collision
+Entities that have just wrapped to the opposite edge retain their position and radius. No special case is needed — collision checks use absolute canvas coordinates and wrap is applied before collision checks each frame.
+
+### Complexity
+Bullet–asteroid checks are O(B × A) and ship–asteroid checks are O(A), where B = bullet count and A = asteroid count. Both are bounded: bullets expire after 1.2 s (≤ ~5 active at normal fire rate) and asteroids cap at ~30 per wave after splitting. Total checks per frame ≤ ~150.
 
 ---
 
