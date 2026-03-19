@@ -17,6 +17,10 @@ in that role for the entire session unless told otherwise.
 - Prioritises the backlog and decides what goes into the next iteration.
 - Reviews completed features against acceptance criteria and signs them off.
 - Does **not** write code, tests, or modify `DESIGN.md`.
+- **Handoff:** after writing/updating a feature requirement in `ROADMAP.md`, notify the Architect:
+  `./scripts/notify.sh architect "New feature ready for design: <feature name>. See ROADMAP.md."`
+- **Sign-off:** after reviewing a completed feature, notify the Architect:
+  `./scripts/notify.sh architect "Feature <name> signed off. Pick up next item from ROADMAP.md if ready."`
 
 ### Architect
 **Responsibility:** Design, documentation, and technical decisions.
@@ -27,6 +31,11 @@ in that role for the entire session unless told otherwise.
 - Reviews merged code for design drift and calls it out explicitly.
 - Commits design changes directly to `main`.
 - Does **not** write game logic or tests.
+- **Handoff after design:** notify Dev and QA in parallel once `DESIGN.md` is updated:
+  `./scripts/notify.sh dev "DESIGN.md updated for <feature>. Please implement on branch feature-<name>."`
+  `./scripts/notify.sh qa "DESIGN.md updated for <feature>. Please write tests on branch test-<name>."`
+- **Handoff after merge:** once both branches are merged and tests pass, notify PO:
+  `./scripts/notify.sh po "Feature <name> merged and tested. Please review against acceptance criteria."`
 
 ### Dev
 **Responsibility:** Implement features exactly as specified in `DESIGN.md`.
@@ -34,8 +43,9 @@ in that role for the entire session unless told otherwise.
 - Read `DESIGN.md` before writing any code — implement to the spec, not to
   assumptions.
 - Keep commits focused: one logical change per commit.
-- Open a PR (or notify) when the branch is ready for review.
 - Does **not** modify `DESIGN.md` or test files.
+- **Handoff:** once implementation is committed and pushed, notify the Architect:
+  `./scripts/notify.sh architect "feature-<name> is ready for review and merge."`
 
 ### QA
 **Responsibility:** Write and maintain the Playwright test suite.
@@ -44,6 +54,8 @@ in that role for the entire session unless told otherwise.
   and the code disagree, flag it; do not silently test the wrong behaviour.
 - One spec file per feature area under `tests/`.
 - Does **not** modify game source files or `DESIGN.md`.
+- **Handoff:** once tests are committed and pushed, notify the Architect:
+  `./scripts/notify.sh architect "test-<name> is ready for review and merge."`
 
 ---
 

@@ -8,8 +8,11 @@
 set -e
 
 CMUX=/Applications/cmux.app/Contents/Resources/bin/cmux
-CLAUDE=/Applications/cmux.app/Contents/Resources/bin/claude
 CWD="$(cd "$(dirname "$0")/.." && pwd)"
+WORKSPACE_FILE="$CWD/.claude/workspaces.json"
+
+# Reset workspace registry
+echo '{}' > "$WORKSPACE_FILE"
 
 for ROLE in po architect dev qa; do
   case "$ROLE" in
@@ -21,6 +24,10 @@ for ROLE in po architect dev qa; do
 
   # Open a new workspace in the project directory (output: "OK workspace:N")
   WS=$($CMUX new-workspace --cwd "$CWD" | awk '{print $2}')
+
+  # Save workspace ID to registry
+  tmp=$(mktemp)
+  jq --arg role "$ROLE" --arg ws "$WS" '. + {($role): $ws}' "$WORKSPACE_FILE" > "$tmp" && mv "$tmp" "$WORKSPACE_FILE"
 
   # Give it a readable name
   $CMUX rename-workspace --workspace "$WS" "$LABEL"
@@ -36,4 +43,6 @@ for ROLE in po architect dev qa; do
 done
 
 echo ""
+echo "Workspace registry saved to .claude/workspaces.json"
+echo "Agents can now hand off to each other via: ./scripts/notify.sh <role> <message>"
 echo "All four agents running. Switch between them with Ctrl+Tab (or your cmux workspace shortcut)."
