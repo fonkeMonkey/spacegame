@@ -11,14 +11,15 @@ CMUX=/Applications/cmux.app/Contents/Resources/bin/cmux
 CLAUDE=/Applications/cmux.app/Contents/Resources/bin/claude
 CWD="$(cd "$(dirname "$0")/.." && pwd)"
 
-# Capitalise first letter (works on macOS bash 3)
-capitalise() { echo "$(tr '[:lower:]' '[:upper:]' <<< "${1:0:1}")${1:1}"; }
-
 for ROLE in architect dev qa; do
-  LABEL=$(capitalise "$ROLE")
+  case "$ROLE" in
+    architect) LABEL="Architect" ;;
+    dev)       LABEL="Dev"       ;;
+    qa)        LABEL="QA"        ;;
+  esac
 
-  # Open a new workspace in the project directory
-  WS=$($CMUX new-workspace --cwd "$CWD")
+  # Open a new workspace in the project directory (output: "OK workspace:N")
+  WS=$($CMUX new-workspace --cwd "$CWD" | awk '{print $2}')
 
   # Give it a readable name
   $CMUX rename-workspace --workspace "$WS" "$LABEL"
