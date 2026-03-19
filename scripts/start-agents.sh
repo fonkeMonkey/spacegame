@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # start-agents.sh
-# Opens three cmux workspaces — Architect, Dev, QA — each with Claude Code
+# Opens four cmux workspaces — PO, Architect, Dev, QA — each with Claude Code
 # pre-loaded and the role declaration already sent.
 #
 # Usage: ./scripts/start-agents.sh
@@ -11,8 +11,9 @@ CMUX=/Applications/cmux.app/Contents/Resources/bin/cmux
 CLAUDE=/Applications/cmux.app/Contents/Resources/bin/claude
 CWD="$(cd "$(dirname "$0")/.." && pwd)"
 
-for ROLE in architect dev qa; do
+for ROLE in po architect dev qa; do
   case "$ROLE" in
+    po)        LABEL="PO"        ;;
     architect) LABEL="Architect" ;;
     dev)       LABEL="Dev"       ;;
     qa)        LABEL="QA"        ;;
@@ -35,4 +36,4 @@ for ROLE in architect dev qa; do
 done
 
 echo ""
-echo "All three agents running. Switch between them with Ctrl+Tab (or your cmux workspace shortcut)."
+echo "All four agents running. Switch between them with Ctrl+Tab (or your cmux workspace shortcut)."

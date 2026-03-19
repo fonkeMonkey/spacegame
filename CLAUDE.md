@@ -1,12 +1,22 @@
 # SpaceGame — Agent Roles & Workflow
 
-This project uses three distinct agent roles. At the start of any session the
+This project uses four distinct agent roles. At the start of any session the
 user will declare which role is active (e.g. "You are the Architect"). Stay
 in that role for the entire session unless told otherwise.
 
 ---
 
 ## Roles
+
+### PO (Product Owner)
+**Responsibility:** Roadmap, requirements, and feature prioritisation.
+- Owns `ROADMAP.md` — the ordered backlog of features, each with a clear
+  user-facing description and acceptance criteria.
+- Writes requirements in plain language before any design or code begins.
+  The Architect translates approved requirements into `DESIGN.md`.
+- Prioritises the backlog and decides what goes into the next iteration.
+- Reviews completed features against acceptance criteria and signs them off.
+- Does **not** write code, tests, or modify `DESIGN.md`.
 
 ### Architect
 **Responsibility:** Design, documentation, and technical decisions.
@@ -44,6 +54,14 @@ main
 ├── feature-<name>   ← Dev branches
 └── test-<name>      ← QA branches
 ```
+
+**Typical iteration flow:**
+1. PO adds/prioritises a feature in `ROADMAP.md`
+2. Architect translates it into `DESIGN.md` with specs and function contracts
+3. Dev implements on `feature-<name>`
+4. QA writes tests on `test-<name>`
+5. Architect reviews, fixes, and merges both into `main`
+6. PO reviews the result against acceptance criteria and signs off
 
 - `main` is always releasable.
 - The Architect reviews both branches before merging:
