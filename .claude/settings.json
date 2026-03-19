@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Before ending this session, update the project memory file at ~/.claude/projects/-Users-pavol-virdzek-dev-playground-spacegame/memory/MEMORY.md. Reflect any changes made this session: new files created or modified, design decisions taken, bugs fixed, tests added, current git branch and status, and anything the next agent (Architect, Dev, or QA) will need to pick up where you left off. Keep it concise and factual. Do not add duplicate information — update existing entries if they changed, add new ones if they are genuinely new.",
+            "statusMessage": "Saving session context to memory..."
+          }
+        ]
+      }
+    ]
+  }
+}
