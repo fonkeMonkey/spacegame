@@ -3,7 +3,7 @@
   var base = document.currentScript
     ? document.currentScript.src.replace(/game\.js$/, '')
     : 'src/';
-  var modules = ['utils.js', 'input.js', 'collision.js', 'bullet.js', 'asteroid.js', 'ship.js', 'particle.js', 'renderer.js'];
+  var modules = ['utils.js', 'input.js', 'collision.js', 'bullet.js', 'asteroid.js', 'ship.js', 'particle.js', 'audio.js', 'renderer.js'];
   modules.forEach(function(m) {
     var s = document.createElement('script');
     s.src = base + m;
@@ -25,6 +25,7 @@ var state = {
 };
 var ship, asteroids, bullets, particles;
 var lastTime = 0;
+var prevThrusting = false;
 
 // --- Init ---
 function init() {
@@ -33,11 +34,13 @@ function init() {
   input = new Input();
 
   window.addEventListener('keydown', function(e) {
+    ensureAudio();
     if (e.code === 'Enter') {
       if (state.mode === 'MENU' || state.mode === 'GAME_OVER') resetGame();
     }
   });
 
+  window.audioEnabled = true;
   loadHighScore();
   requestAnimationFrame(gameLoop);
 }
@@ -69,11 +72,14 @@ function update(dt) {
 
   // Update ship
   ship.update(dt, input, canvas.width, canvas.height);
+  if (ship.thrusting && !prevThrusting) startThrust();
+  if (!ship.thrusting && prevThrusting) stopThrust();
+  prevThrusting = ship.thrusting;
 
   // Shoot (Space held down — rate-limited by ship.fireCooldown)
   if (input.isDown('Space')) {
     var b = ship.fire();
-    if (b) bullets.push(b);
+    if (b) { bullets.push(b); playShoot(); }
   }
 
   // Update bullets
@@ -99,6 +105,7 @@ function update(dt) {
       if (circleCollides(bullets[bi], asteroids[ai])) {
         state.score += asteroids[ai].score;
         spawnParticles(asteroids[ai].x, asteroids[ai].y);
+        playExplosion();
         var fragments = asteroids[ai].split();
         asteroids.splice(ai, 1);
         bullets.splice(bi, 1);
@@ -111,6 +118,7 @@ function update(dt) {
   // Ship vs asteroid
   for (var k = 0; k < asteroids.length; k++) {
     if (circleCollides(ship, asteroids[k])) {
+      playExplosion();
       state.lives--;
       if (state.lives <= 0) {
         saveHighScore();
