@@ -63,7 +63,7 @@ function drawHUD(ctx, state) {
   ctx.fillText('LIVES: ' + state.lives, 10, 64);
 }
 
-function drawScreen(ctx, w, h, title, subtitle) {
+function drawScreen(ctx, w, h, title, subtitle, footer) {
   ctx.fillStyle = 'rgba(0,0,0,0.6)';
   ctx.fillRect(0, 0, w, h);
   ctx.textAlign = 'center';
@@ -72,5 +72,6 @@ function drawScreen(ctx, w, h, title, subtitle) {
   ctx.fillText(title, w / 2, h / 2 - 20);
   ctx.font = '20px monospace';
   ctx.fillText(subtitle, w / 2, h / 2 + 30);
+  if (footer) ctx.fillText(footer, w / 2, h / 2 + 60);
   ctx.textAlign = 'left';
 }
