@@ -36,7 +36,12 @@ for ROLE in po architect dev qa; do
   $CMUX send --workspace "$WS" "claude"$'\n'
 
   # Wait for Claude to boot, then declare the role
-  sleep 4
+  # First agent needs longer — subsequent ones benefit from cumulative loop time
+  if [[ "$ROLE" == "po" ]]; then
+    sleep 8
+  else
+    sleep 4
+  fi
   $CMUX send --workspace "$WS" "You are the ${LABEL}."$'\n'
 
   echo "Started $LABEL in workspace $WS"
