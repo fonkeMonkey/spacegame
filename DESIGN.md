@@ -88,6 +88,35 @@ Score is accumulated in `state.score` during a game. It resets to `0` at the sta
 #### Extra life
 - Extra life every 10,000 pts (existing mechanic, unchanged).
 
+### Sound Effects
+
+All audio is synthesised via the **Web Audio API** — no external files. A single `AudioContext` is created lazily on the first user `keydown` event to satisfy browser autoplay policy.
+
+**Global flag:** `window.audioEnabled` (boolean, default `true`). Every sound function returns immediately if `window.audioEnabled` is `false` — this silences all audio without destroying the context. Tests set `window.audioEnabled = false` before the game loop runs.
+
+#### Sounds
+
+| Sound     | Trigger                                             | Synthesis                                                              |
+|-----------|-----------------------------------------------------|------------------------------------------------------------------------|
+| Thrust    | Ship is thrusting (Up/W held)                       | Sawtooth oscillator at 80 Hz, gain 0.3; runs continuously while active |
+| Shoot     | Each bullet fired (`ship.fire()` returns a bullet)  | Sine oscillator at 880 Hz; gain envelope: instant attack, decay to 0 in 80 ms |
+| Explosion | Asteroid destroyed by bullet; ship–asteroid collision | White-noise `AudioBuffer`, lowpass filter at 800 Hz, gain decays to 0 in 300 ms |
+
+#### AudioContext lifecycle
+
+- Module-level `var audioCtx = null` in `audio.js`.
+- `ensureAudio()` — if `audioCtx` is null, construct `new AudioContext()`; if suspended, call `audioCtx.resume()`; return `audioCtx`. Returns `null` when `window.audioEnabled` is false.
+- `ensureAudio()` is called at the start of every sound function and also from the `keydown` listener in `init()` (covers the first interaction that creates the context).
+
+#### Thrust state tracking
+
+`game.js` adds a module-level `var prevThrusting = false`. Each `update()` call, after `ship.update()`:
+1. If `ship.thrusting && !prevThrusting` → call `startThrust()`.
+2. If `!ship.thrusting && prevThrusting` → call `stopThrust()`.
+3. `prevThrusting = ship.thrusting`.
+
+This ensures the oscillator starts and stops exactly once per thrust edge, regardless of frame rate.
+
 ### Waves
 - Each wave increases asteroid count by 1 (starting at 4)
 - Brief pause between waves
@@ -106,6 +135,7 @@ spacegame/
     ├── asteroid.js     # Asteroid entity + split logic
     ├── bullet.js       # Bullet entity
     ├── particle.js     # Particle entity (visual debris)
+    ├── audio.js        # Web Audio API synthesis (thrust, shoot, explosion)
     ├── input.js        # Keyboard input handler
     ├── collision.js    # Circle-based collision detection
     ├── renderer.js     # All canvas draw calls
@@ -119,9 +149,9 @@ spacegame/
 ### `game.js`
 | Function | Description |
 |---|---|
-| `init()` | Set up canvas, create initial entities, bind input, load high score via `loadHighScore()`, start loop |
+| `init()` | Set up canvas, create initial entities, bind input, load high score, call `ensureAudio()` on every `keydown`, start loop; set `window.audioEnabled = true` before loop starts |
 | `gameLoop(timestamp)` | RAF callback — calls update + render each frame |
-| `update(dt)` | Advance all entities, check collisions, manage wave state |
+| `update(dt)` | Advance all entities, check collisions, manage wave state; detect thrust transitions and call `startThrust()`/`stopThrust()`; call `playShoot()` when a bullet is fired; call `playExplosion()` on bullet–asteroid hit and ship–asteroid collision |
 | `spawnWave(count)` | Create `count` large asteroids away from ship |
 | `spawnParticles(x, y)` | Emit 8–12 `Particle` objects at `(x, y)`, push to `particles` array |
 | `resetGame()` | Restore initial state for new game; resets `state.score` to 0; does **not** reset `state.highScore`; clears `particles` array |
@@ -155,6 +185,15 @@ spacegame/
 | `Particle(x, y)` | Constructor — random angle, speed (60–180 px/s), lifetime (0.4–0.8 s); no radius |
 | `particle.update(dt)` | Integrate position, decrement lifetime, wrap via `wrapPosition` |
 | `particle.isExpired()` | Return true when lifetime <= 0 |
+
+### `audio.js`
+| Function | Description |
+|---|---|
+| `ensureAudio()` | Create `AudioContext` if null; resume if suspended; return context (or `null` if `!window.audioEnabled`) |
+| `startThrust()` | Create and start a sawtooth `OscillatorNode` at 80 Hz with gain 0.3; store reference to stop later |
+| `stopThrust()` | Stop and disconnect the running thrust oscillator; clear the stored reference |
+| `playShoot()` | Create sine oscillator at 880 Hz; apply gain envelope (peak → 0 over 80 ms); auto-disconnect on end |
+| `playExplosion()` | Create white-noise `AudioBufferSourceNode`; apply lowpass filter at 800 Hz; gain decays to 0 over 300 ms; auto-disconnect on end |
 
 ### `collision.js`
 | Function | Description |
@@ -253,3 +292,5 @@ Bullet–asteroid checks are O(B × A) and ship–asteroid checks are O(A), wher
 - Delta time (`dt`) in seconds passed to all `update()` calls
 - All entities stored in plain arrays; no ECS needed at this scale
 - Collision detection is brute-force O(n^2) — fine for < 50 entities
+- Web Audio API: single `AudioContext` per session; all sound nodes are created fresh per invocation and disconnected when done (no node leaks); thrust oscillator is the only long-lived node
+- `window.audioEnabled = false` is the test harness escape hatch — QA sets this via `page.evaluate` before interacting with the game to prevent audio errors in headless Chromium
