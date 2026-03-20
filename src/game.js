@@ -72,14 +72,16 @@ function update(dt) {
 
   // Update ship
   ship.update(dt, input, canvas.width, canvas.height);
-  if (ship.thrusting && !prevThrusting) startThrust();
-  if (!ship.thrusting && prevThrusting) stopThrust();
+  try {
+    if (ship.thrusting && !prevThrusting) startThrust();
+    if (!ship.thrusting && prevThrusting) stopThrust();
+  } catch(e) {}
   prevThrusting = ship.thrusting;
 
   // Shoot (Space held down — rate-limited by ship.fireCooldown)
   if (input.isDown('Space')) {
     var b = ship.fire();
-    if (b) { bullets.push(b); playShoot(); }
+    if (b) { bullets.push(b); try { playShoot(); } catch(e) {} }
   }
 
   // Update bullets
@@ -105,7 +107,7 @@ function update(dt) {
       if (circleCollides(bullets[bi], asteroids[ai])) {
         state.score += asteroids[ai].score;
         spawnParticles(asteroids[ai].x, asteroids[ai].y);
-        playExplosion();
+        try { playExplosion(); } catch(e) {}
         var fragments = asteroids[ai].split();
         asteroids.splice(ai, 1);
         bullets.splice(bi, 1);
@@ -118,7 +120,7 @@ function update(dt) {
   // Ship vs asteroid
   for (var k = 0; k < asteroids.length; k++) {
     if (circleCollides(ship, asteroids[k])) {
-      playExplosion();
+      try { playExplosion(); } catch(e) {}
       state.lives--;
       if (state.lives <= 0) {
         saveHighScore();
