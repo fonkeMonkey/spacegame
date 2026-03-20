@@ -23,39 +23,42 @@ and QA begin work.
 | Player ship movement & shooting | WASD + hold Space to auto-fire |
 | Asteroids & collision detection | Three sizes, split on hit, lives system |
 | Particle explosions when asteroids are destroyed | 8–12 particles per burst, screen-wrap, visual only |
+| Score persistence | Score in HUD, high score on MENU + GAME_OVER, persisted in localStorage |
 
 ### Ready
 
-#### Score persistence
+#### Sound effects
 
-**User story:** As a player, I want my high score saved between sessions so
-that I have a personal best to chase and a reason to keep playing.
+**User story:** As a player, I want to hear audio feedback for thrust, shooting,
+and explosions so the game feels alive and responsive.
 
 **Requirements:**
-- Track the player's current score during a game: +20 for destroying a large
-  asteroid, +50 for medium, +100 for small (classic Asteroids values).
-- Display the current score in the HUD during play (top-left corner).
-- At game-over, compare the final score to the stored high score in
-  `localStorage`. If higher, overwrite it.
-- Display the high score on the MENU screen and the GAME_OVER screen.
-- On first ever visit (no stored value), high score displays as 0.
-- Score resets to 0 at the start of each new game.
+- All sounds synthesised via the **Web Audio API** — no external audio files.
+- Three distinct sounds:
+  - **Thrust:** low rumble while the ship is thrusting (plays continuously
+    while Up/W held, stops immediately on key release).
+  - **Shoot:** short sharp blip each time a bullet is fired.
+  - **Explosion:** brief noise burst each time an asteroid is destroyed (any
+    size); also plays on ship–asteroid collision.
+- Sounds must not block or delay the game loop.
+- Audio context must be created (or resumed) on first user interaction to
+  satisfy browser autoplay policy.
+- A global `window.audioEnabled` boolean defaults to `true`; setting it to
+  `false` silences all sounds (useful for tests and the user preference).
 
 **Acceptance criteria:**
-- [ ] Destroying a large/medium/small asteroid increments score by 20/50/100.
-- [ ] Current score is visible in the HUD during a game.
-- [ ] High score is shown on the MENU screen before the first game starts.
-- [ ] After game-over with a new high score, refreshing the page still shows
-      the updated high score (persisted in localStorage).
-- [ ] After game-over with a lower score, the previous high score is unchanged.
-- [ ] Score resets to 0 when a new game begins.
+- [ ] Thrust sound starts when the player holds thrust and stops when released.
+- [ ] A blip plays each time a bullet is fired.
+- [ ] An explosion sound plays each time any asteroid is destroyed by a bullet.
+- [ ] An explosion sound plays when the ship collides with an asteroid.
+- [ ] No sound plays when `window.audioEnabled = false`.
+- [ ] No console errors on load or during gameplay.
 - [ ] All existing Playwright tests continue to pass after the feature lands.
 
 ### Ideas
 
 | Idea | Description |
 |---|---|
-| Sound effects | Thrust, shoot, explosion sounds via Web Audio API |
 | UFO enemy | Periodic UFO that fires at the player |
 | Shield power-up | Temporary invincibility pick-up |
 | Difficulty scaling | Asteroids get faster as score increases |
