@@ -22,18 +22,40 @@ and QA begin work.
 |---|---|
 | Player ship movement & shooting | WASD + hold Space to auto-fire |
 | Asteroids & collision detection | Three sizes, split on hit, lives system |
+| Particle explosions when asteroids are destroyed | 8–12 particles per burst, screen-wrap, visual only |
 
 ### Ready
 
-_Nothing queued yet — PO to add next feature here._
+#### Score persistence
+
+**User story:** As a player, I want my high score saved between sessions so
+that I have a personal best to chase and a reason to keep playing.
+
+**Requirements:**
+- Track the player's current score during a game: +20 for destroying a large
+  asteroid, +50 for medium, +100 for small (classic Asteroids values).
+- Display the current score in the HUD during play (top-left corner).
+- At game-over, compare the final score to the stored high score in
+  `localStorage`. If higher, overwrite it.
+- Display the high score on the MENU screen and the GAME_OVER screen.
+- On first ever visit (no stored value), high score displays as 0.
+- Score resets to 0 at the start of each new game.
+
+**Acceptance criteria:**
+- [ ] Destroying a large/medium/small asteroid increments score by 20/50/100.
+- [ ] Current score is visible in the HUD during a game.
+- [ ] High score is shown on the MENU screen before the first game starts.
+- [ ] After game-over with a new high score, refreshing the page still shows
+      the updated high score (persisted in localStorage).
+- [ ] After game-over with a lower score, the previous high score is unchanged.
+- [ ] Score resets to 0 when a new game begins.
+- [ ] All existing Playwright tests continue to pass after the feature lands.
 
 ### Ideas
 
 | Idea | Description |
 |---|---|
-| Score persistence | Save high score to localStorage |
 | Sound effects | Thrust, shoot, explosion sounds via Web Audio API |
-| Particle explosions | Visual debris when asteroids are destroyed |
 | UFO enemy | Periodic UFO that fires at the player |
 | Shield power-up | Temporary invincibility pick-up |
 | Difficulty scaling | Asteroids get faster as score increases |
