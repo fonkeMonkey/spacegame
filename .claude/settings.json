@@ -4,8 +4,9 @@
       {
         "hooks": [
           {
-            "type": "prompt",
-            "prompt": "Before ending this session, update the project memory file at ~/.claude/projects/-Users-pavol-virdzek-dev-playground-spacegame/memory/MEMORY.md. Reflect any changes made this session: new files created or modified, design decisions taken, bugs fixed, tests added, current git branch and status, and anything the next agent (Architect, Dev, or QA) will need to pick up where you left off. Keep it concise and factual. Do not add duplicate information — update existing entries if they changed, add new ones if they are genuinely new.",
+            "type": "command",
+            "command": "f=/tmp/spacegame-memory-ts; t=$(date +%s); [ -f \"$f\" ] && [ $((t - $(cat \"$f\"))) -lt 300 ] && exit 0; echo $t > \"$f\"; claude --dangerously-skip-permissions --model us.anthropic.claude-haiku-4-5-20251001-v1:0 -p \"Update ~/.claude/projects/-Users-pavol-virdzek-dev-playground-spacegame/memory/MEMORY.md to reflect this session: files changed, design decisions, bugs fixed, git status. Update existing entries, add only genuinely new ones. Be concise.\"",
+            "timeout": 90,
             "statusMessage": "Saving session context to memory..."
           }
         ]

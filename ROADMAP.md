@@ -24,10 +24,9 @@ and QA begin work.
 | Asteroids & collision detection | Three sizes, split on hit, lives system |
 | Particle explosions when asteroids are destroyed | 8–12 particles per burst, screen-wrap, visual only |
 | Score persistence | Score in HUD, high score on MENU + GAME_OVER, persisted in localStorage |
+| Sound effects | Thrust/shoot/explosion via Web Audio API synthesis; audioEnabled flag |
 
 ### Ready
-
-#### Sound effects
 
 **User story:** As a player, I want to hear audio feedback for thrust, shooting,
 and explosions so the game feels alive and responsive.
