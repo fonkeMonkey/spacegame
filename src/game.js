@@ -18,6 +18,7 @@ var canvas, ctx, input;
 var state = {
   mode: 'MENU',   // MENU | PLAYING | WAVE_CLEAR | GAME_OVER
   score: 0,
+  highScore: 0,
   lives: 3,
   wave: 0,
   wavePause: 0,
@@ -37,6 +38,7 @@ function init() {
     }
   });
 
+  loadHighScore();
   requestAnimationFrame(gameLoop);
 }
 
@@ -111,6 +113,7 @@ function update(dt) {
     if (circleCollides(ship, asteroids[k])) {
       state.lives--;
       if (state.lives <= 0) {
+        saveHighScore();
         state.mode = 'GAME_OVER';
         return;
       }
@@ -132,12 +135,12 @@ function render() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   if (state.mode === 'MENU') {
-    drawScreen(ctx, canvas.width, canvas.height, 'SPACEGAME', 'Press ENTER to start');
+    drawScreen(ctx, canvas.width, canvas.height, 'SPACEGAME', 'HIGH SCORE: ' + state.highScore, 'Press ENTER to start');
     return;
   }
 
   if (state.mode === 'GAME_OVER') {
-    drawScreen(ctx, canvas.width, canvas.height, 'GAME OVER', 'Score: ' + state.score + '  —  Press ENTER');
+    drawScreen(ctx, canvas.width, canvas.height, 'GAME OVER', 'Score: ' + state.score, 'Best: ' + state.highScore + '  —  Press ENTER');
     return;
   }
 
@@ -148,7 +151,7 @@ function render() {
   drawHUD(ctx, state);
 
   if (state.mode === 'WAVE_CLEAR') {
-    drawScreen(ctx, canvas.width, canvas.height, 'WAVE ' + (state.wave + 1), 'Get ready...');
+    drawScreen(ctx, canvas.width, canvas.height, 'WAVE ' + (state.wave + 1), 'Get ready...', '');
   }
 }
 
@@ -182,4 +185,16 @@ function resetGame() {
   particles = [];
   ship = new Ship(canvas.width / 2, canvas.height / 2);
   spawnWave(4);
+}
+
+function loadHighScore() {
+  var val = parseInt(localStorage.getItem('spacegame-highscore'), 10);
+  state.highScore = isNaN(val) ? 0 : val;
+}
+
+function saveHighScore() {
+  if (state.score > state.highScore) {
+    state.highScore = state.score;
+    localStorage.setItem('spacegame-highscore', state.highScore);
+  }
 }
