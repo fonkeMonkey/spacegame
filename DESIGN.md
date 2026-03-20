@@ -69,10 +69,24 @@ When `x` or `y` crosses a canvas boundary the position wraps to the opposite edg
 - Stored in a global `particles` array; cleared on `resetGame()`
 
 ### Scoring
-- Small asteroid: 100 pts
-- Medium asteroid: 50 pts
-- Large asteroid: 20 pts
-- Extra life every 10,000 pts
+
+#### Per-asteroid points
+| Size   | Points |
+|--------|--------|
+| Large  | 20     |
+| Medium | 50     |
+| Small  | 100    |
+
+Score is accumulated in `state.score` during a game. It resets to `0` at the start of each new game (`resetGame()`).
+
+#### High score persistence
+- The all-time high score is stored in `localStorage` under the key `'spacegame-highscore'`.
+- On `init()`, the stored value is read and placed into `state.highScore` (default `0` if absent or non-numeric).
+- When the game transitions to `GAME_OVER` (lives reach 0), `saveHighScore()` is called: if `state.score > state.highScore`, the new value is written to localStorage and `state.highScore` is updated in memory.
+- High score is **not** reset when starting a new game — it persists across sessions.
+
+#### Extra life
+- Extra life every 10,000 pts (existing mechanic, unchanged).
 
 ### Waves
 - Each wave increases asteroid count by 1 (starting at 4)
@@ -105,12 +119,14 @@ spacegame/
 ### `game.js`
 | Function | Description |
 |---|---|
-| `init()` | Set up canvas, create initial entities, bind input, start loop |
+| `init()` | Set up canvas, create initial entities, bind input, load high score via `loadHighScore()`, start loop |
 | `gameLoop(timestamp)` | RAF callback — calls update + render each frame |
 | `update(dt)` | Advance all entities, check collisions, manage wave state |
 | `spawnWave(count)` | Create `count` large asteroids away from ship |
 | `spawnParticles(x, y)` | Emit 8–12 `Particle` objects at `(x, y)`, push to `particles` array |
-| `resetGame()` | Restore initial state for new game; clears `particles` array |
+| `resetGame()` | Restore initial state for new game; resets `state.score` to 0; does **not** reset `state.highScore`; clears `particles` array |
+| `loadHighScore()` | Read `'spacegame-highscore'` from localStorage; assign integer to `state.highScore` (default 0 if absent) |
+| `saveHighScore()` | If `state.score > state.highScore`, write to localStorage and update `state.highScore` |
 
 ### `ship.js`
 | Function | Description |
@@ -152,7 +168,13 @@ spacegame/
 | `drawAsteroid(ctx, asteroid)` | Draw irregular polygon |
 | `drawBullet(ctx, bullet)` | Draw small circle/dot |
 | `drawParticles(ctx, particles)` | Draw each particle as a white filled circle (radius 2) |
-| `drawHUD(ctx, state)` | Score, lives, wave number |
+| `drawHUD(ctx, state)` | Score, lives, wave number (top-left during PLAYING) |
+| `drawScreen(ctx, w, h, title, subtitle, footer)` | Overlay panel with large title, subtitle, and optional footer line; used for MENU, WAVE_CLEAR, and GAME_OVER |
+
+**Screen content per mode:**
+- `MENU`: title=`'SPACEGAME'`, subtitle=`'HIGH SCORE: ' + state.highScore`, footer=`'Press ENTER to start'`
+- `GAME_OVER`: title=`'GAME OVER'`, subtitle=`'Score: ' + state.score`, footer=`'Best: ' + state.highScore + '  —  Press ENTER'`
+- `WAVE_CLEAR`: title=`'WAVE ' + (state.wave + 1)`, subtitle=`'Get ready...'`, footer=`''`
 
 ### `input.js`
 | Function | Description |
@@ -169,11 +191,26 @@ spacegame/
 
 ---
 
+## Game State Object
+
+`state` is a plain object with the following fields:
+
+| Field       | Type    | Initial value | Description                                  |
+|-------------|---------|---------------|----------------------------------------------|
+| `mode`      | string  | `'MENU'`      | Current game state (see Game States below)   |
+| `score`     | integer | `0`           | Score for the current game                   |
+| `highScore` | integer | from localStorage | All-time best score; loaded in `init()` |
+| `lives`     | integer | `3`           | Remaining lives                              |
+| `wave`      | integer | `0`           | Current wave index (1-based in display)      |
+| `wavePause` | float   | `0`           | Seconds remaining in WAVE_CLEAR pause        |
+
+---
+
 ## Game States
-- `MENU` — title screen, press Enter to start
+- `MENU` — title screen; shows high score; press Enter to start
 - `PLAYING` — active gameplay
 - `WAVE_CLEAR` — brief pause before next wave
-- `GAME_OVER` — show score, press Enter to restart
+- `GAME_OVER` — shows final score and high score; press Enter to restart
 
 ---
 
